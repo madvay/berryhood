@@ -13,28 +13,44 @@ from time import sleep, strftime, time
 
 MIL = 1000000
 
-C_RED = (255,0,0)
+BRIGHTNESS = 64
+FULLB = BRIGHTNESS
+
 C_BLACK = (0,0,0)
-C_BLUE = (0,0,255)
-C_GREEN = (0,255,0)
-C_WHITE = (255,255,255)
+C_DIM = (int(FULLB*3/4),int(FULLB*3/4),int(FULLB*3/4))
+
+C_RED = (FULLB,0,0)
+C_GREEN = (0,FULLB,0)
+C_BLUE = (0,0,FULLB)
+
+
+C_YELLOW = (FULLB,FULLB,0)
+C_PURPLE = (FULLB,0,FULLB)
+C_CYAN = (0,FULLB,FULLB)
+
+C_WHITE = (FULLB,FULLB,FULLB)
+
+last_blink = 0
+
 
 sense = None
-try:
-    sense = SenseHat()
-    sense.clear(C_BLACK)
-    sleep(0.25)
-    sense.clear(C_RED)
-    sleep(0.25)
-    sense.clear(C_GREEN)
-    sleep(0.25)
-    sense.clear(C_BLUE)
-    sleep(0.25)
-    sense.clear(C_WHITE)
-    sleep(0.25)
-    sense.clear(C_BLACK)
-except:
-    sense = None
+if 'SENSE_HAT' in os.environ:
+    print('Attempting to load Sense HAT')
+    try:
+        sense = SenseHat()
+        sense.clear(C_BLACK)
+        sleep(0.25)
+        sense.clear(C_RED)
+        sleep(0.25)
+        sense.clear(C_GREEN)
+        sleep(0.25)
+        sense.clear(C_BLUE)
+        sleep(0.25)
+        sense.clear(C_WHITE)
+        sleep(0.25)
+        sense.clear(C_BLACK)
+    except:
+        sense = None
 
 def vcgencmd(args):
     v = ["/opt/vc/bin/vcgencmd"]
@@ -105,6 +121,8 @@ def throttle_state():
     return ret
 
 def ifttt_report(v1, v2, v3):
+    if not 'IFTTT_TOKEN' in os.environ:
+        return
 
     def ifttt_report_impl():
         url = 'https://maker.ifttt.com/trigger/berry_metrics/with/key/' + os.environ['IFTTT_TOKEN']
@@ -120,18 +138,45 @@ def ifttt_report(v1, v2, v3):
     t = Thread(target=ifttt_report_impl, args=())
     t.start()
 
+def drawbar(val, vmin, vmax, x, color):
+    lin = (val - vmin) / (vmax - vmin)
+    mlin = int(max(0,min(8,round(lin * 8,0))))
+    for y in range(0, 8):
+        if y < mlin:
+            sense.set_pixel(x,y,color)
+        else:
+            sense.set_pixel(x,y,C_BLACK)
+    if mlin == 0:
+        sense.set_pixel(x,0,C_RED)
+
 def display(temp, freq, state):
+    global last_blink
     if not sense:
         return
-    def display_impl():
-        sense.set_pixel(0,0,C_RED)
-        sense.set_pixel(0,1,C_RED)
-        sleep(0.25)
-        sense.set_pixel(0,0,C_BLACK)
-        sense.set_pixel(0,1,C_BLACK)
+    def display_impl(blink):
+        if blink:
+            sense.set_pixel(0,0,C_DIM)
+            sense.set_pixel(0,1,C_BLACK)
+        else:
+            sense.set_pixel(0,0,C_BLACK)
+            sense.set_pixel(0,1,C_DIM)
+        drawbar(temp, 40, 80, 2, C_GREEN)
+        drawbar(freq, 600000000, 1400000000, 4, C_BLUE)
 
-    t = Thread(target=display_impl, args=())
-    t.start()
+        sense.set_pixel(7,0,C_RED if ('U' in state) else C_BLACK)
+        sense.set_pixel(7,1,C_GREEN if ('C' in state) else C_BLACK)
+        sense.set_pixel(7,2,C_BLUE if ('T' in state) else C_BLACK)
+
+        sense.set_pixel(7,5,C_RED if ('u' in state) else C_BLACK)
+        sense.set_pixel(7,6,C_GREEN if ('c' in state) else C_BLACK)
+        sense.set_pixel(7,7,C_BLUE if ('t' in state) else C_BLACK)
+
+
+    #t = Thread(target=display_impl, args=(last_blink < 1,))
+    #t.start()
+    display_impl(last_blink<1)
+    last_blink = 1 - last_blink
+
 
 while True:
     temp = float(temperature())
@@ -141,4 +186,4 @@ while True:
     print('{0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state))
     ifttt_report(temp, freq, state)
     display(temp, freq, state)
-    sleep(10)
+    sleep(1)
