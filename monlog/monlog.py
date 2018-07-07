@@ -8,9 +8,33 @@ from threading import Thread
 import urllib.request
 import os
 import re
+from sense_hat import SenseHat
 from time import sleep, strftime, time
 
 MIL = 1000000
+
+C_RED = (255,0,0)
+C_BLACK = (0,0,0)
+C_BLUE = (0,0,255)
+C_GREEN = (0,255,0)
+C_WHITE = (255,255,255)
+
+sense = None
+try:
+    sense = SenseHat()
+    sense.clear(C_BLACK)
+    sleep(0.25)
+    sense.clear(C_RED)
+    sleep(0.25)
+    sense.clear(C_GREEN)
+    sleep(0.25)
+    sense.clear(C_BLUE)
+    sleep(0.25)
+    sense.clear(C_WHITE)
+    sleep(0.25)
+    sense.clear(C_BLACK)
+except:
+    sense = None
 
 def vcgencmd(args):
     v = ["/opt/vc/bin/vcgencmd"]
@@ -96,11 +120,25 @@ def ifttt_report(v1, v2, v3):
     t = Thread(target=ifttt_report_impl, args=())
     t.start()
 
+def display(temp, freq, state):
+    if not sense:
+        return
+    def display_impl():
+        sense.set_pixel(0,0,C_RED)
+        sense.set_pixel(0,1,C_RED)
+        sleep(0.25)
+        sense.set_pixel(0,0,C_BLACK)
+        sense.set_pixel(0,1,C_BLACK)
+
+    t = Thread(target=display_impl, args=())
+    t.start()
+
 while True:
     temp = float(temperature())
     freq = int(clock_freq('arm'))
     state = throttle_state()
 
-    print('{0:>5.1f} C   {1:>8.2f} Mhz   {2:8s}'.format(temp, freq/MIL, state))
+    print('{0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state))
     ifttt_report(temp, freq, state)
+    display(temp, freq, state)
     sleep(10)
