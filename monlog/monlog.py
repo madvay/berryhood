@@ -11,6 +11,35 @@ import re
 from sense_hat import SenseHat
 from time import sleep, strftime, time
 
+import argparse
+
+min_temp = 40
+max_temp = 80
+min_freq = 600000000
+max_freq = 1400000000
+
+parser = argparse.ArgumentParser(description='Monitor Logger',
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("-s", "--sensehat",
+                    help="enables the Sense HAT LEDs",
+                    action="store_true")
+parser.add_argument("-i", "--ifttt",
+                    help="posts metrics to IFTTT using the key stored in env var IFTTT_TOKEN",
+                    action="store_true")
+parser.add_argument("-p", "--period", type=float, default=1,
+                    help="seconds to sleep between monitoring")
+parser.add_argument("--min_temp", type=float, default=min_temp, help="Min bar graph temperature")
+parser.add_argument("--max_temp", type=float, default=max_temp, help="Max bar graph temperature")
+parser.add_argument("--min_freq", type=int, default=min_freq, help="Min bar graph frequency")
+parser.add_argument("--max_freq", type=int, default=max_freq, help="Max bar graph frequency")
+args = parser.parse_args()
+
+
+min_temp = args.min_temp
+max_temp = args.max_temp
+min_freq = args.min_freq
+max_freq = args.max_freq
+
 MIL = 1000000
 
 BRIGHTNESS = 64
@@ -34,7 +63,7 @@ last_blink = 0
 
 
 sense = None
-if 'SENSE_HAT' in os.environ:
+if args.sensehat:
     print('Attempting to load Sense HAT')
     try:
         sense = SenseHat()
@@ -121,7 +150,7 @@ def throttle_state():
     return ret
 
 def ifttt_report(v1, v2, v3):
-    if not 'IFTTT_TOKEN' in os.environ:
+    if not (args.ifttt and 'IFTTT_TOKEN' in os.environ):
         return
 
     def ifttt_report_impl():
@@ -160,8 +189,8 @@ def display(temp, freq, state):
         else:
             sense.set_pixel(0,0,C_BLACK)
             sense.set_pixel(0,1,C_DIM)
-        drawbar(temp, 40, 80, 2, C_GREEN)
-        drawbar(freq, 600000000, 1400000000, 4, C_BLUE)
+        drawbar(temp, min_temp, max_temp, 2, C_GREEN)
+        drawbar(freq, min_freq, max_freq, 4, C_BLUE)
 
         sense.set_pixel(7,0,C_RED if ('U' in state) else C_BLACK)
         sense.set_pixel(7,1,C_GREEN if ('C' in state) else C_BLACK)
@@ -186,4 +215,4 @@ while True:
     print('{0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state))
     ifttt_report(temp, freq, state)
     display(temp, freq, state)
-    sleep(1)
+    sleep(args.period)
