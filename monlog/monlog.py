@@ -1,15 +1,19 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2018 by Advay Mengle - https://github.com/madvay/berryhood
 # See the LICENSE and NOTICE files in the root of this repository.
 
 import subprocess
 import urllib.parse
 import time
+import datetime
+import threading
+from datetime import datetime
 from threading import Thread
 import urllib.request
 import os
 import re
 from sense_hat import SenseHat
-from time import sleep, strftime, time
 
 import argparse
 
@@ -32,6 +36,9 @@ parser.add_argument("--min_temp", type=float, default=min_temp, help="Min bar gr
 parser.add_argument("--max_temp", type=float, default=max_temp, help="Max bar graph temperature")
 parser.add_argument("--min_freq", type=int, default=min_freq, help="Min bar graph frequency")
 parser.add_argument("--max_freq", type=int, default=max_freq, help="Max bar graph frequency")
+parser.add_argument("--led_rotation", help="rotation of the Sense HAT LEDs (90deg increments)",
+                    type=int, default=0)
+
 args = parser.parse_args()
 
 
@@ -78,6 +85,8 @@ if args.sensehat:
         sense.clear(C_WHITE)
         sleep(0.25)
         sense.clear(C_BLACK)
+        sense.set_rotation(args.led_rotation)
+        sense.low_light = False
     except:
         sense = None
 
@@ -200,19 +209,32 @@ def display(temp, freq, state):
         sense.set_pixel(7,6,C_GREEN if ('c' in state) else C_BLACK)
         sense.set_pixel(7,7,C_BLUE if ('t' in state) else C_BLACK)
 
-
     #t = Thread(target=display_impl, args=(last_blink < 1,))
     #t.start()
     display_impl(last_blink<1)
     last_blink = 1 - last_blink
 
 
-while True:
+def oneshot():
     temp = float(temperature())
     freq = int(clock_freq('arm'))
     state = throttle_state()
 
-    print('{0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state))
+    ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+
+    print('{3}  {0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state, ts))
     ifttt_report(temp, freq, state)
     display(temp, freq, state)
-    sleep(args.period)
+
+def loop():
+    when = time.time()
+    period = args.period
+    while True:
+        oneshot()
+        when = when + period
+        # Reduce sleep drift.
+        s = when - time.time()
+        if s > 0:
+            time.sleep(s)
+
+loop()
