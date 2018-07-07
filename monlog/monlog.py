@@ -2,8 +2,15 @@
 # See the LICENSE and NOTICE files in the root of this repository.
 
 import subprocess
+import urllib.parse
+import time
+from threading import Thread
+import urllib.request
+import os
 import re
 from time import sleep, strftime, time
+
+MIL = 1000000
 
 def vcgencmd(args):
     v = ["/opt/vc/bin/vcgencmd"]
@@ -34,7 +41,7 @@ def throttle_state():
 
     # lower-case letters indicate past-tense;
     # upper-case are current states.
-    
+
     # cpu throttling
     if v & (1 << 18):
         ret = ret + 't'
@@ -46,7 +53,7 @@ def throttle_state():
         ret = ret + 'c'
     else:
         ret = ret + '-'
-        
+
     # under-voltage
     if v & (1 << 16):
         ret = ret + 'u'
@@ -71,13 +78,29 @@ def throttle_state():
     else:
         ret = ret + '-'
 
-
-
-    
     return ret
 
+def ifttt_report(v1, v2, v3):
+
+    def ifttt_report_impl():
+        url = 'https://maker.ifttt.com/trigger/berry_metrics/with/key/' + os.environ['IFTTT_TOKEN']
+        values = {'value1' : v1,
+                'value2' : v2,
+                'value3' : v3 }
+        form = urllib.parse.urlencode(values)
+        data = form.encode('utf-8')
+        req = urllib.request.Request(url, data)
+        with urllib.request.urlopen(req) as resp:
+            _ = resp.read()
+
+    t = Thread(target=ifttt_report_impl, args=())
+    t.start()
+
 while True:
-    print(temperature())
-    print(clock_freq('arm'))
-    print(throttle_state())
-    sleep(1)
+    temp = float(temperature())
+    freq = int(clock_freq('arm'))
+    state = throttle_state()
+
+    print('{0:>5.1f} C   {1:>8.2f} Mhz   {2:8s}'.format(temp, freq/MIL, state))
+    ifttt_report(temp, freq, state)
+    sleep(10)
