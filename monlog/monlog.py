@@ -10,6 +10,7 @@ import datetime
 import threading
 from datetime import datetime
 from threading import Thread
+from time import sleep
 import urllib.request
 import os
 import re
@@ -25,7 +26,10 @@ max_freq = 1400000000
 parser = argparse.ArgumentParser(description='Monitor Logger',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-s", "--sensehat",
-                    help="enables the Sense HAT LEDs",
+                    help="enables the Sense HAT LEDs, optionally",
+                    action="store_true")
+parser.add_argument("--sensehat_required",
+                    help="fails if the Sense HAT LED cannot be loaded (requires --sensehat also)",
                     action="store_true")
 parser.add_argument("-i", "--ifttt",
                     help="posts metrics to IFTTT using the key stored in env var IFTTT_TOKEN",
@@ -88,6 +92,9 @@ if args.sensehat:
         sense.set_rotation(args.led_rotation)
         sense.low_light = False
     except:
+        print("Failed to load Sense HAT")
+        if args.sensehat_required:
+            raise
         sense = None
 
 def vcgencmd(args):
