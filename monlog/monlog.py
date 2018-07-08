@@ -37,6 +37,7 @@ parser.add_argument("--sensehat_required",
 parser.add_argument("-i", "--ifttt",
                     help="posts metrics to IFTTT using the key stored in env var IFTTT_TOKEN",
                     action="store_true")
+parser.add_argument("--ifttt_period", help="send an IFTTT post every N executions", type=int, default=1)
 parser.add_argument("-p", "--period", type=float, default=1,
                     help="seconds to sleep between monitoring")
 parser.add_argument("--min_temp", type=float, default=min_temp, help="Min bar graph temperature")
@@ -260,9 +261,9 @@ def display(temp, freq, state):
     last_blink = 1 - last_blink
 
 printon = 0
-
+ifttton = 0
 def oneshot():
-    global printon
+    global printon, ifttton
     temp = float(temperature())
     freq = int(clock_freq('arm'))
     state = throttle_state()
@@ -271,8 +272,9 @@ def oneshot():
         ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f %Z')
         print('{3}  {0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state, ts))
     printon = printon + 1
-
-    ifttt_report(temp, freq, state)
+    if ifttton % args.ifttt_period == 0:
+        ifttt_report(temp, freq, state)
+    ifttton = ifttton + 1
     display(temp, freq, state)
 
 
