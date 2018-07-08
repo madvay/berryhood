@@ -1,0 +1,3 @@
+[submodule "berryhood-diagrams"]
+	path = berryhood-diagrams
+	url = https://github.com/madvay/berryhood-diagrams
