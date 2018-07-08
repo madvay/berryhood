@@ -7,6 +7,7 @@ import subprocess
 import urllib.parse
 import time
 import datetime
+import sys
 import threading
 from datetime import datetime
 from threading import Thread
@@ -15,6 +16,9 @@ import urllib.request
 import os
 import re
 from sense_hat import SenseHat
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
 
 import argparse
 
@@ -43,8 +47,43 @@ parser.add_argument("--max_freq", type=int, default=max_freq, help="Max bar grap
 parser.add_argument("--led_rotation", help="rotation of the Sense HAT LEDs (90deg increments)",
                     type=int, default=0)
 
+
+parser.add_argument("--log", help="path to log to", type=str, default=None)
+parser.add_argument("--log_days", help="days of logs to keep", type=int, default=7)
+parser.add_argument("--log_period", help="print/log every N executions", type=int, default=1)
+
+# Sets up our logs, and redirects stdout/err to those logs
+def setup_logs(path, days):
+    logger = logging.getLogger(__name__)
+    handler = TimedRotatingFileHandler(path, when='midnight', backupCount=days)
+    formatter = logging.Formatter('%(asctime)s [%(levelname)-10s] <%(name)s> %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
+    class LoggerStream:
+        def __init__(self, logger, level):
+            self.logger = logger
+            self.level = level
+
+        def write(self, msg):
+            # skip the garbage
+            if msg != '\n':
+                self.logger.log(self.level, msg)
+
+        def flush(_):
+            # can't force a flush of the logger
+            return
+
+    sys.stderr = LoggerStream(logger, logging.ERROR)
+    sys.stdout = LoggerStream(logger, logging.INFO)
+    return logger
+
+
 args = parser.parse_args()
 
+if args.log:
+    setup_logs(args.log, args.log_days)
 
 min_temp = args.min_temp
 max_temp = args.max_temp
@@ -221,15 +260,19 @@ def display(temp, freq, state):
     display_impl(last_blink<1)
     last_blink = 1 - last_blink
 
+printon = 0
 
 def oneshot():
+    global printon
     temp = float(temperature())
     freq = int(clock_freq('arm'))
     state = throttle_state()
 
-    ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+    if printon % args.log_period == 0:
+        ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+        print('{3}  {0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state, ts))
+    printon = printon + 1
 
-    print('{3}  {0:>5.1f} C   {1:>8.2f} MHz   {2:8s}'.format(temp, freq/MIL, state, ts))
     ifttt_report(temp, freq, state)
     display(temp, freq, state)
 
