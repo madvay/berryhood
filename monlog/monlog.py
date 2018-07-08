@@ -18,8 +18,7 @@ import re
 from sense_hat import SenseHat
 import logging
 from logging.handlers import TimedRotatingFileHandler
-
-
+import signal
 import argparse
 
 min_temp = 40
@@ -276,15 +275,29 @@ def oneshot():
     ifttt_report(temp, freq, state)
     display(temp, freq, state)
 
+
+muststop = False
+def stop(sig, frame):
+    global muststop
+    print('SIGTERM captured')
+    muststop = True
+
+signal.signal(signal.SIGTERM, stop)
+
 def loop():
     when = time.time()
     period = args.period
-    while True:
+    while not muststop:
         oneshot()
         when = when + period
         # Reduce sleep drift.
         s = when - time.time()
         if s > 0:
-            time.sleep(s)
+            sleep(s)
+    print('Exitting')
+    if sense:
+        sense.clear(C_YELLOW)
+        sleep(0.1)
+        sense.clear(C_BLACK)
 
 loop()
