@@ -36,7 +36,7 @@ optional arguments:
 
 ## Sense HAT display
 
-<img src="../berryhood-diagrams/monlog/monlog.svg" />
+<img src="https://raw.githubusercontent.com/madvay/berryhood-diagrams/master/monlog/monlog.svg?sanitize=true" />
 
 Includes:
 
