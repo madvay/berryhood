@@ -1,0 +1,18 @@
+Title	Price	Used per Pi	Price Per Pi	Minimum Kit	Cooled/Case	Clustered	Everything	Amazon
+Raspberry Pi 3b+	$42.88	1	$42.88	Y	Y	Y	Y	https://www.amazon.com/gp/product/B07BDR5PDW/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1
+32gb microSD EVO+ Card	$14.40	1	$14.40	Y	Y	Y	Y	https://www.amazon.com/gp/product/B00WR4IJBE/ref=oh_aui_detailpage_o01_s00?ie=UTF8&th=1
+5.1V/2.4A Power Supply	$17.99	1	$17.99	Y	Y	Y	Y	https://www.amazon.com/gp/product/B0793FR8ZJ/ref=oh_aui_detailpage_o01_s02?ie=UTF8&psc=1
+Stackable Open Case	$8.99	1	$8.99		Y	Y	Y	https://www.amazon.com/gp/product/B01LXSMY1N/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1
+22mm Heat sink x10	$9.97	0.1	$1.00		Y	Y	Y	https://www.amazon.com/gp/product/B01JB8MQ76/ref=oh_aui_detailpage_o02_s01?ie=UTF8&psc=1
+Noctua Fan NF-A4x20 5V	$14.95	1	$14.95		Y	Y	Y	https://www.amazon.com/gp/product/B072Q3CMRW/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1
+M3 spacer/screw set x30	$10.99	0.1333	$1.47		Y	Y	Y	https://www.amazon.com/gp/product/B01LOIKEWU/ref=oh_aui_detailpage_o04_s00?ie=UTF8&psc=1
+Arctic Silver Alumina Thermal Adhesive	$17.25	0.25	$4.31		Y	Y	Y	https://www.amazon.com/gp/product/B0087X725S/ref=oh_aui_detailpage_o02_s01?ie=UTF8&psc=1
+Ethernet cable x5	$8.99	0.2	$1.80			Y	Y	https://www.amazon.com/gp/product/B078X2BKJ4/ref=oh_aui_detailpage_o01_s02?ie=UTF8&psc=1
+32gb usb thumbdrive	$12.99	1	$12.99			Y	Y	https://www.amazon.com/gp/product/B013CCTOC2/ref=oh_aui_detailpage_o04_s00?ie=UTF8&psc=1
+8port unmanaged L2 switch	$24.99	0.1667	$4.17			Y	Y	https://www.amazon.com/gp/product/B00A121WN6/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1
+8mp camera	$26.81	1	$26.81				Y	https://www.amazon.com/gp/product/B01ER2SKFS/ref=oh_aui_detailpage_o04_s00?ie=UTF8&psc=1
+Sensor/Led HAT	$37.98	1	$37.98				Y	https://www.amazon.com/gp/product/B014HDG74S/ref=oh_aui_detailpage_o07_s00?ie=UTF8&psc=1
+Touchscreen	$69.87	1	$69.87				Y	https://www.amazon.com/gp/product/B0153R2A9I/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1
+								
+Total	$319.05		$259.60	$75.27	$105.98	$124.94	$259.60	
+	initial cost		amortized cost	min cost	cooled	clustered	everything	
